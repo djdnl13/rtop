@@ -243,7 +243,7 @@ func showStats(output io.Writer, client *ssh.Client) {
 	getAllStats(client, &stats)
 	//clearConsole()
 	used := stats.MemTotal - stats.MemFree - stats.MemBuffers - stats.MemCached
-        cpu := 100 - stats.CPUIdle
+        cpu := 100 - stats.CPU.Idle
 	fmt.Fprintf(output, `%s%.2f%s`, cpu ,used)
 }
 
