@@ -43,7 +43,7 @@ import (
 )
 
 const VERSION = "1.0"
-const DEFAULT_REFRESH = 5 // default refresh interval in seconds
+const DEFAULT_REFRESH = 1 // default refresh interval in seconds
 
 var currentUser *user.User
 
@@ -221,6 +221,7 @@ func main() {
 
 	output := getOutput()
 	// the loop
+        fmt.Println("cpu,ram");
 	showStats(output, client)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
@@ -240,88 +241,10 @@ func main() {
 func showStats(output io.Writer, client *ssh.Client) {
 	stats := Stats{}
 	getAllStats(client, &stats)
-	clearConsole()
+	//clearConsole()
 	used := stats.MemTotal - stats.MemFree - stats.MemBuffers - stats.MemCached
-	fmt.Fprintf(output,
-		`%s%s%s%s up %s%s%s
-
-Load:
-    %s%s %s %s%s
-
-CPU:
-    %s%.2f%s%% user, %s%.2f%s%% sys, %s%.2f%s%% nice, %s%.2f%s%% idle, %s%.2f%s%% iowait, %s%.2f%s%% hardirq, %s%.2f%s%% softirq, %s%.2f%s%% guest
-
-Processes:
-    %s%s%s running of %s%s%s total
-
-Memory:
-    free    = %s%s%s
-    used    = %s%s%s
-    buffers = %s%s%s
-    cached  = %s%s%s
-    swap    = %s%s%s free of %s%s%s
-
-`,
-		escClear,
-		escBrightWhite, stats.Hostname, escReset,
-		escBrightWhite, fmtUptime(&stats), escReset,
-		escBrightWhite, stats.Load1, stats.Load5, stats.Load10, escReset,
-		escBrightWhite, stats.CPU.User, escReset,
-		escBrightWhite, stats.CPU.System, escReset,
-		escBrightWhite, stats.CPU.Nice, escReset,
-		escBrightWhite, stats.CPU.Idle, escReset,
-		escBrightWhite, stats.CPU.Iowait, escReset,
-		escBrightWhite, stats.CPU.Irq, escReset,
-		escBrightWhite, stats.CPU.SoftIrq, escReset,
-		escBrightWhite, stats.CPU.Guest, escReset,
-		escBrightWhite, stats.RunningProcs, escReset,
-		escBrightWhite, stats.TotalProcs, escReset,
-		escBrightWhite, fmtBytes(stats.MemFree), escReset,
-		escBrightWhite, fmtBytes(used), escReset,
-		escBrightWhite, fmtBytes(stats.MemBuffers), escReset,
-		escBrightWhite, fmtBytes(stats.MemCached), escReset,
-		escBrightWhite, fmtBytes(stats.SwapFree), escReset,
-		escBrightWhite, fmtBytes(stats.SwapTotal), escReset,
-	)
-	if len(stats.FSInfos) > 0 {
-		fmt.Println("Filesystems:")
-		for _, fs := range stats.FSInfos {
-			fmt.Fprintf(output, "    %s%8s%s: %s%s%s free of %s%s%s\n",
-				escBrightWhite, fs.MountPoint, escReset,
-				escBrightWhite, fmtBytes(fs.Free), escReset,
-				escBrightWhite, fmtBytes(fs.Used+fs.Free), escReset,
-			)
-		}
-		fmt.Println()
-	}
-	if len(stats.NetIntf) > 0 {
-		fmt.Println("Network Interfaces:")
-		keys := make([]string, 0, len(stats.NetIntf))
-		for intf := range stats.NetIntf {
-			keys = append(keys, intf)
-		}
-		sort.Strings(keys)
-		for _, intf := range keys {
-			info := stats.NetIntf[intf]
-			fmt.Fprintf(output, "    %s%s%s - %s%s%s",
-				escBrightWhite, intf, escReset,
-				escBrightWhite, info.IPv4, escReset,
-			)
-			if len(info.IPv6) > 0 {
-				fmt.Fprintf(output, ", %s%s%s\n",
-					escBrightWhite, info.IPv6, escReset,
-				)
-			} else {
-				fmt.Fprintf(output, "\n")
-			}
-			fmt.Fprintf(output, "      rx = %s%s%s, tx = %s%s%s\n",
-				escBrightWhite, fmtBytes(info.Rx), escReset,
-				escBrightWhite, fmtBytes(info.Tx), escReset,
-			)
-			fmt.Println()
-		}
-		fmt.Println()
-	}
+        cpu := 100 - stats.CPUIdle
+	fmt.Fprintf(output, `%s%.2f%s`, cpu ,used)
 }
 
 const (
